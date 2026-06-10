@@ -113,6 +113,12 @@ Run the label-efficiency experiment:
 python scripts/05_run_label_efficiency.py --data_dir data/raw --label shd_moderate_or_greater_flag
 ```
 
+Run the repeated-seed stability experiment for the core models:
+
+```bash
+python scripts/07_run_seed_stability.py --data_dir data/raw --label shd_moderate_or_greater_flag --seeds 42 43 44
+```
+
 Build summary tables and figures from completed runs:
 
 ```bash
@@ -135,10 +141,13 @@ The aggregation script creates:
 
 - `outputs/tables/model_performance_by_input.csv`
 - `outputs/tables/label_efficiency_results.csv`
+- `outputs/tables/seed_stability_results.csv`
+- `outputs/tables/seed_stability_summary.csv`
 - `outputs/figures/auroc_by_input.png`
 - `outputs/figures/auprc_by_input.png`
 - `outputs/figures/label_efficiency_auroc.png`
 - `outputs/figures/calibration_plot.png`
+- `outputs/figures/seed_stability_auroc.png`
 
 ## Notes
 
