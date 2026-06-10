@@ -25,6 +25,7 @@ def load_run_metrics(models_dir: Path) -> list[dict]:
             "label": metrics["label"],
             "input_mode": metrics["input_mode"],
             "lead": metrics["lead"],
+            "leads": metrics.get("leads"),
             "train_fraction": metrics["train_fraction"],
             "n_train": metrics["splits"]["train"]["n"],
             "n_test": metrics["test_metrics"]["n"],
@@ -45,6 +46,8 @@ def calibration_label(row: pd.Series) -> str:
         return "tabular only"
     if row["input_mode"] == "full12":
         return "full 12-lead"
+    if row["input_mode"] == "subset":
+        return "six limb leads"
     if row["input_mode"] == "single_plus_tabular":
         return "lead I + tabular"
     return f"lead {row['lead']}"

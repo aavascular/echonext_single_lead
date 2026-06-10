@@ -123,12 +123,19 @@ def build_model(input_mode: str, config: dict, tabular_dim: int = 7, lead_channe
             kernel_size=model_config["ecg_kernel_size"],
             dropout=model_config["ecg_dropout"],
         )
-    if input_mode == "single_plus_tabular":
+    if input_mode in {"single_plus_tabular", "subset_plus_tabular"}:
         return ECGPlusTabularModel(
             in_channels=lead_channels or 1,
             tabular_dim=tabular_dim,
             ecg_channels=model_config["ecg_channels"],
             ecg_dropout=model_config["ecg_dropout"],
             fusion_hidden_dim=model_config["fusion_hidden_dim"],
+        )
+    if input_mode == "subset":
+        return ECG1DCNN(
+            in_channels=lead_channels or 1,
+            channels=model_config["ecg_channels"],
+            kernel_size=model_config["ecg_kernel_size"],
+            dropout=model_config["ecg_dropout"],
         )
     raise ValueError(f"Unsupported input_mode '{input_mode}'.")

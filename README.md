@@ -77,6 +77,10 @@ Colab starter notebook:
 
 [`notebooks/01_colab_starter.ipynb`](/Users/aaljobeh/Documents/EchoNext/echonext_single_lead/notebooks/01_colab_starter.ipynb)
 
+Publication pipeline notebook:
+
+[`notebooks/02_publication_pipeline.ipynb`](/Users/aaljobeh/Documents/EchoNext/echonext_single_lead/notebooks/02_publication_pipeline.ipynb)
+
 Inspect the dataset:
 
 ```bash
@@ -116,7 +120,13 @@ python scripts/05_run_label_efficiency.py --data_dir data/raw --label shd_modera
 Run the repeated-seed stability experiment for the core models:
 
 ```bash
-python scripts/07_run_seed_stability.py --data_dir data/raw --label shd_moderate_or_greater_flag --seeds 42 43 44
+python scripts/07_run_seed_stability.py --data_dir data/raw --label shd_moderate_or_greater_flag --seeds 42 43 44 --include_six_limb
+```
+
+Build publication-style core summaries from the completed seeded runs:
+
+```bash
+python scripts/08_make_publication_results.py --label shd_moderate_or_greater_flag --seeds 42 43 44 --include_six_limb
 ```
 
 Build summary tables and figures from completed runs:
@@ -143,11 +153,16 @@ The aggregation script creates:
 - `outputs/tables/label_efficiency_results.csv`
 - `outputs/tables/seed_stability_results.csv`
 - `outputs/tables/seed_stability_summary.csv`
+- `outputs/tables/publication_core_results.csv`
 - `outputs/figures/auroc_by_input.png`
 - `outputs/figures/auprc_by_input.png`
 - `outputs/figures/label_efficiency_auroc.png`
 - `outputs/figures/calibration_plot.png`
 - `outputs/figures/seed_stability_auroc.png`
+- `outputs/figures/publication_core_roc.png`
+- `outputs/figures/publication_core_pr.png`
+- `outputs/figures/publication_core_auroc_ci.png`
+- `outputs/figures/publication_core_auprc_ci.png`
 
 ## Notes
 

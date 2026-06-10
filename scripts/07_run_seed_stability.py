@@ -22,6 +22,8 @@ def display_name(input_mode: str, lead: str | None) -> str:
         return "tabular only"
     if input_mode == "full12":
         return "full 12-lead"
+    if input_mode == "subset":
+        return "six limb leads"
     if input_mode == "single_plus_tabular":
         return "lead I + tabular"
     return f"lead {lead}"
@@ -35,6 +37,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--batch_size", type=int, default=None)
     parser.add_argument("--epochs", type=int, default=None)
     parser.add_argument("--lr", type=float, default=None)
+    parser.add_argument("--include_six_limb", action="store_true")
     parser.add_argument("--output_dir", type=str, default="outputs")
     parser.add_argument("--config", type=str, default=None)
     return parser
@@ -50,15 +53,19 @@ def main() -> None:
         ("single_plus_tabular", "I"),
         ("full12", None),
     ]
+    if args.include_six_limb:
+        experiments.insert(3, ("subset", None))
 
     rows: list[dict] = []
     for seed in args.seeds:
         for input_mode, lead in experiments:
+            leads_arg = "I,II,III,aVR,aVL,aVF" if input_mode == "subset" else None
             run_args = Namespace(
                 data_dir=args.data_dir,
                 label=args.label,
                 input_mode=input_mode,
                 lead=lead,
+                leads=leads_arg,
                 batch_size=args.batch_size,
                 epochs=args.epochs,
                 lr=args.lr,
@@ -74,6 +81,7 @@ def main() -> None:
                     "seed": seed,
                     "input_mode": input_mode,
                     "lead": lead,
+                    "leads": leads_arg,
                     "model_name": display_name(input_mode, lead),
                     "n_test": metrics["test_metrics"]["n"],
                     "prevalence": metrics["test_metrics"]["prevalence"],

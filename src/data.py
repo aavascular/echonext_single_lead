@@ -11,8 +11,15 @@ from sklearn.model_selection import train_test_split
 from torch.utils.data import Dataset
 
 
-VALID_INPUT_MODES = {"full12", "single", "tabular", "single_plus_tabular"}
-WAVEFORM_INPUT_MODES = {"full12", "single", "single_plus_tabular"}
+VALID_INPUT_MODES = {
+    "full12",
+    "single",
+    "tabular",
+    "single_plus_tabular",
+    "subset",
+    "subset_plus_tabular",
+}
+WAVEFORM_INPUT_MODES = {"full12", "single", "single_plus_tabular", "subset", "subset_plus_tabular"}
 
 
 @dataclass
@@ -51,6 +58,7 @@ class EchoNextDataset(Dataset):
         label_col: str,
         input_mode: str,
         lead: str | None = None,
+        leads: list[str] | None = None,
         indices: np.ndarray | None = None,
     ) -> None:
         self.data_dir = Path(data_dir)
@@ -59,16 +67,23 @@ class EchoNextDataset(Dataset):
         self.label_col = label_col
         self.input_mode = input_mode
         self.lead = lead
+        self.leads = leads
 
         if self.input_mode not in VALID_INPUT_MODES:
             raise ValueError(f"Unsupported input_mode '{input_mode}'. Expected one of {sorted(VALID_INPUT_MODES)}.")
         if self.input_mode in {"single", "single_plus_tabular"} and not self.lead:
             raise ValueError("A lead name is required for single-lead input modes.")
+        if self.input_mode in {"subset", "subset_plus_tabular"} and not self.leads:
+            raise ValueError("A lead list is required for subset input modes.")
 
         self.lead_names = config["lead_names"]
         self.lead_to_idx = {name: idx for idx, name in enumerate(self.lead_names)}
         if self.lead and self.lead not in self.lead_to_idx:
             raise ValueError(f"Unknown lead '{self.lead}'. Expected one of {self.lead_names}.")
+        if self.leads:
+            unknown = [name for name in self.leads if name not in self.lead_to_idx]
+            if unknown:
+                raise ValueError(f"Unknown leads {unknown}. Expected values from {self.lead_names}.")
 
         split_paths = resolve_split_paths(self.data_dir, config, self.split)
         metadata = _read_metadata(split_paths.metadata_path)
@@ -132,6 +147,9 @@ class EchoNextDataset(Dataset):
         x = np.asarray(x).squeeze(0)
         if self.input_mode == "full12":
             x = x.T
+        elif self.input_mode in {"subset", "subset_plus_tabular"}:
+            lead_indices = [self.lead_to_idx[name] for name in self.leads or []]
+            x = x[:, lead_indices].T
         else:
             lead_idx = self.lead_to_idx[self.lead]  # type: ignore[index]
             x = x[:, lead_idx][None, :]

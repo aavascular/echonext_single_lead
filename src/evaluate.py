@@ -14,7 +14,7 @@ from src.metrics import compute_binary_classification_metrics
 def model_forward(model: torch.nn.Module, batch: dict[str, torch.Tensor], input_mode: str, device: torch.device) -> torch.Tensor:
     if input_mode == "tabular":
         return model(batch["tabular"].to(device))
-    if input_mode == "single_plus_tabular":
+    if input_mode in {"single_plus_tabular", "subset_plus_tabular"}:
         return model(batch["waveform"].to(device), batch["tabular"].to(device))
     return model(batch["waveform"].to(device))
 

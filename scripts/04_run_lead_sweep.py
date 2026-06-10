@@ -39,15 +39,18 @@ def main() -> None:
         experiments.append(("tabular", None, label))
         experiments.append(("full12", None, label))
         experiments.append(("single_plus_tabular", "I", label))
+        experiments.append(("subset", None, label))
         for lead in leads:
             experiments.append(("single", lead, label))
 
     for input_mode, lead, label in experiments:
+        leads_arg = "I,II,III,aVR,aVL,aVF" if input_mode == "subset" else None
         run_args = Namespace(
             data_dir=args.data_dir,
             label=label,
             input_mode=input_mode,
             lead=lead,
+            leads=leads_arg,
             batch_size=args.batch_size,
             epochs=args.epochs,
             lr=args.lr,
@@ -61,6 +64,7 @@ def main() -> None:
             "label": label,
             "input_mode": input_mode,
             "lead": lead,
+            "leads": leads_arg,
             "n_test": metrics["test_metrics"]["n"],
             "prevalence": metrics["test_metrics"]["prevalence"],
             "AUROC": metrics["test_metrics"]["auroc"],

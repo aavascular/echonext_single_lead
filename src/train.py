@@ -17,15 +17,21 @@ from src.config import load_config
 from src.data import EchoNextDataset, describe_split, subset_indices_stratified
 from src.evaluate import evaluate_predictions, predict, model_forward
 from src.models import build_model
-from src.utils import ensure_dir, get_device, make_run_name, save_json, set_seed
+from src.utils import ensure_dir, get_device, make_run_name, parse_leads, save_json, set_seed
 
 
 def build_arg_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Train EchoNext models.")
     parser.add_argument("--data_dir", type=str, required=True)
     parser.add_argument("--label", type=str, required=True)
-    parser.add_argument("--input_mode", type=str, required=True, choices=["full12", "single", "tabular", "single_plus_tabular"])
+    parser.add_argument(
+        "--input_mode",
+        type=str,
+        required=True,
+        choices=["full12", "single", "tabular", "single_plus_tabular", "subset", "subset_plus_tabular"],
+    )
     parser.add_argument("--lead", type=str, default=None)
+    parser.add_argument("--leads", type=str, default=None, help="Comma-separated lead names for subset modes.")
     parser.add_argument("--batch_size", type=int, default=None)
     parser.add_argument("--epochs", type=int, default=None)
     parser.add_argument("--lr", type=float, default=None)
@@ -37,6 +43,7 @@ def build_arg_parser() -> argparse.ArgumentParser:
 
 
 def make_dataloaders(args: argparse.Namespace, config: dict[str, Any]) -> tuple[dict[str, EchoNextDataset], dict[str, DataLoader], dict[str, Any]]:
+    lead_list = parse_leads(getattr(args, "leads", None))
     train_dataset = EchoNextDataset(
         data_dir=args.data_dir,
         config=config,
@@ -44,6 +51,7 @@ def make_dataloaders(args: argparse.Namespace, config: dict[str, Any]) -> tuple[
         label_col=args.label,
         input_mode=args.input_mode,
         lead=args.lead,
+        leads=lead_list,
     )
 
     train_fraction = args.train_fraction if args.train_fraction is not None else config["training"]["train_fraction"]
@@ -56,6 +64,7 @@ def make_dataloaders(args: argparse.Namespace, config: dict[str, Any]) -> tuple[
             label_col=args.label,
             input_mode=args.input_mode,
             lead=args.lead,
+            leads=lead_list,
             indices=train_indices,
         )
 
@@ -66,6 +75,7 @@ def make_dataloaders(args: argparse.Namespace, config: dict[str, Any]) -> tuple[
         label_col=args.label,
         input_mode=args.input_mode,
         lead=args.lead,
+        leads=lead_list,
     )
     test_dataset = EchoNextDataset(
         data_dir=args.data_dir,
@@ -74,6 +84,7 @@ def make_dataloaders(args: argparse.Namespace, config: dict[str, Any]) -> tuple[
         label_col=args.label,
         input_mode=args.input_mode,
         lead=args.lead,
+        leads=lead_list,
     )
 
     batch_size = args.batch_size or config["training"]["batch_size"]
@@ -133,6 +144,7 @@ def run_training(args: argparse.Namespace) -> dict[str, Any]:
     config = load_config(args.config)
     set_seed(args.seed)
     device = get_device()
+    lead_list = parse_leads(getattr(args, "leads", None))
 
     datasets, dataloaders, loader_info = make_dataloaders(args, config)
     splits = {name: describe_split(dataset) for name, dataset in datasets.items()}
@@ -148,7 +160,7 @@ def run_training(args: argparse.Namespace) -> dict[str, Any]:
         args.input_mode,
         config=config,
         tabular_dim=len(config["tabular_features"]),
-        lead_channels=1,
+        lead_channels=(12 if args.input_mode == "full12" else len(lead_list) if lead_list else 1),
     ).to(device)
     pos_weight = compute_pos_weight(datasets["train"].label_array()).to(device)
     criterion = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
@@ -162,7 +174,14 @@ def run_training(args: argparse.Namespace) -> dict[str, Any]:
     output_root = Path(args.output_dir)
     models_dir = ensure_dir(output_root / "models")
     predictions_dir = ensure_dir(output_root / "predictions")
-    run_name = make_run_name(args.label, args.input_mode, args.lead, args.seed, loader_info["train_fraction"])
+    run_name = make_run_name(
+        args.label,
+        args.input_mode,
+        args.lead,
+        args.seed,
+        loader_info["train_fraction"],
+        leads=lead_list,
+    )
     run_model_dir = ensure_dir(models_dir / run_name)
     run_pred_dir = ensure_dir(predictions_dir / run_name)
 
@@ -228,6 +247,7 @@ def run_training(args: argparse.Namespace) -> dict[str, Any]:
         "label": args.label,
         "input_mode": args.input_mode,
         "lead": args.lead,
+        "leads": lead_list,
         "seed": args.seed,
         "train_fraction": loader_info["train_fraction"],
         "learning_rate": learning_rate,

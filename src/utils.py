@@ -35,8 +35,30 @@ def save_json(data: dict[str, Any], path: str | Path) -> None:
         json.dump(data, handle, indent=2)
 
 
-def make_run_name(label: str, input_mode: str, lead: str | None, seed: int, train_fraction: float) -> str:
-    lead_part = lead if lead else "none"
+def make_lead_descriptor(lead: str | None = None, leads: list[str] | None = None) -> str:
+    if leads:
+        return "-".join(leads)
+    if lead:
+        return lead
+    return "none"
+
+
+def parse_leads(leads_arg: str | None) -> list[str] | None:
+    if leads_arg is None:
+        return None
+    parsed = [lead.strip() for lead in leads_arg.split(",") if lead.strip()]
+    return parsed or None
+
+
+def make_run_name(
+    label: str,
+    input_mode: str,
+    lead: str | None,
+    seed: int,
+    train_fraction: float,
+    leads: list[str] | None = None,
+) -> str:
+    lead_part = make_lead_descriptor(lead=lead, leads=leads)
     fraction_part = f"{train_fraction:.3f}".rstrip("0").rstrip(".")
     return f"{label}__{input_mode}__{lead_part}__frac_{fraction_part}__seed_{seed}"
 
