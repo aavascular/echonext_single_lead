@@ -1,0 +1,16 @@
+__pycache__/
+*.py[cod]
+.DS_Store
+.venv/
+outputs/models/*
+outputs/predictions/*
+outputs/tables/*
+outputs/figures/*
+!outputs/models/.gitkeep
+!outputs/predictions/.gitkeep
+!outputs/tables/.gitkeep
+!outputs/figures/.gitkeep
+data/raw/*
+data/processed/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep

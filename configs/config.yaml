@@ -1,0 +1,82 @@
+project_name: echonext_single_lead
+
+metadata_filename: echonext_metadata_100k.csv
+
+waveform_files:
+  train: EchoNext_train_waveforms.npy
+  val: EchoNext_val_waveforms.npy
+  test: EchoNext_test_waveforms.npy
+  no_split: EchoNext_no_split_waveforms.npy
+
+tabular_files:
+  train: EchoNext_train_tabular_features.npy
+  val: EchoNext_val_tabular_features.npy
+  test: EchoNext_test_tabular_features.npy
+  no_split: EchoNext_no_split_tabular_features.npy
+
+split_column: split
+patient_id_column: patient_key
+
+lead_names:
+  - I
+  - II
+  - III
+  - aVR
+  - aVL
+  - aVF
+  - V1
+  - V2
+  - V3
+  - V4
+  - V5
+  - V6
+
+tabular_features:
+  - sex
+  - ventricular_rate
+  - atrial_rate
+  - pr_interval
+  - qrs_duration
+  - qt_corrected
+  - age_at_ecg
+
+initial_labels:
+  - shd_moderate_or_greater_flag
+  - lvef_lte_45_flag
+
+all_labels:
+  - shd_moderate_or_greater_flag
+  - lvef_lte_45_flag
+  - lvwt_gte_13_flag
+  - aortic_stenosis_moderate_or_greater_flag
+  - aortic_regurgitation_moderate_or_greater_flag
+  - mitral_regurgitation_moderate_or_greater_flag
+  - tricuspid_regurgitation_moderate_or_greater_flag
+  - pulmonary_regurgitation_moderate_or_greater_flag
+  - rv_systolic_dysfunction_moderate_or_greater_flag
+  - pericardial_effusion_moderate_large_flag
+  - pasp_gte_45_flag
+  - tr_max_gte_32_flag
+
+training:
+  batch_size: 64
+  epochs: 20
+  lr: 0.001
+  weight_decay: 0.0001
+  patience: 5
+  monitor: val_auroc
+  num_workers: 0
+  train_fraction: 1.0
+
+models:
+  tabular_hidden_dims: [64, 32]
+  ecg_channels: [32, 64, 128, 256]
+  ecg_kernel_size: 7
+  ecg_dropout: 0.3
+  fusion_hidden_dim: 64
+
+outputs:
+  models_dir: outputs/models
+  predictions_dir: outputs/predictions
+  tables_dir: outputs/tables
+  figures_dir: outputs/figures
