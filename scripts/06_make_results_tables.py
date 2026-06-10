@@ -67,7 +67,7 @@ def main() -> None:
     df = pd.DataFrame(rows)
 
     benchmark_df = df[df["train_fraction"] == 1.0].copy()
-    benchmark_df = benchmark_df[
+    benchmark_table_df = benchmark_df[
         [
             "label",
             "input_mode",
@@ -81,7 +81,7 @@ def main() -> None:
             "Brier score",
         ]
     ]
-    benchmark_df.to_csv(tables_dir / "model_performance_by_input.csv", index=False)
+    benchmark_table_df.to_csv(tables_dir / "model_performance_by_input.csv", index=False)
 
     efficiency_df = df[df["train_fraction"] != 1.0].copy()
     if not efficiency_df.empty:
